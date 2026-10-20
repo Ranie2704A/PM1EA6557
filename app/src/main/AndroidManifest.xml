@@ -2,10 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-feature
-        android:name="android.hardware.telephony"
-        android:required="false" />
-    <uses-permission android:name="android.permission.CALL_PHONE" /> <!-- -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
         android:allowBackup="true"
@@ -17,7 +14,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PM1EA6557">
 
-        <!-- Actividad principal (Pantalla 1) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -28,10 +24,10 @@
             </intent-filter>
         </activity>
 
-        <!-- Pantalla 3: Llamar (debe estar declarada) -->
         <activity
-            android:name=".LlamarActivity"
-            android:exported="false" />
+            android:name=".ListaActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
     </application>
 
