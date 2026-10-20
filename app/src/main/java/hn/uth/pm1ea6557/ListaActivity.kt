@@ -1,10 +1,7 @@
 package hn.uth.pm1ea6557
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -13,8 +10,6 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 
 class ListaActivity : AppCompatActivity() {
 
@@ -31,8 +26,6 @@ class ListaActivity : AppCompatActivity() {
     private lateinit var adapter: ContactoAdapter
 
     private var contactoSeleccionado: Contacto? = null
-    private var telefonoPendiente: String = ""
-    private val CODIGO_PERMISO_LLAMADA = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -137,12 +130,18 @@ class ListaActivity : AppCompatActivity() {
                     putExtra("NOMBRE", c.nombre)
                     putExtra("TELEFONO", c.telefono)
                     putExtra("NOTA", c.nota)
+                    putExtra("IMAGEN", c.imagen)
                 }
                 startActivity(intent)
             } else {
                 Toast.makeText(this, "Seleccione un contacto de la lista para actualizar", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        cargarContactos()
     }
 
     private fun cargarContactos() {
@@ -165,7 +164,8 @@ class ListaActivity : AppCompatActivity() {
         }
         cursor.close()
         db.close()
-        filtrarContactos("")
+
+        filtrarContactos(txtBuscar.text.toString())
     }
 
     private fun filtrarContactos(texto: String) {
@@ -179,47 +179,24 @@ class ListaActivity : AppCompatActivity() {
     }
 
     private fun mostrarDialogoLlamar(contacto: Contacto) {
-        telefonoPendiente = contacto.telefono
         AlertDialog.Builder(this)
             .setTitle("Acción")
             .setMessage("¿Desea llamar a ${contacto.nombre}?")
             .setPositiveButton("Sí") { _, _ ->
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(
-                        this,
-                        arrayOf(Manifest.permission.CALL_PHONE),
-                        CODIGO_PERMISO_LLAMADA
-                    )
-                } else {
-                    ejecutarLlamada(telefonoPendiente)
+                // Solo extraemos los números del país (ej. "Honduras (504)" a "504")
+                val codigoPais = contacto.pais.filter { it.isDigit() }.ifEmpty { "504" }
+                val telefonoCompleto = "+$codigoPais ${contacto.telefono}"
+
+                // Navegamos a la Pantalla 3 que te tocó hacer
+                val intent = Intent(this, LlamarActivity::class.java).apply {
+                    putExtra("NOMBRE", contacto.nombre)
+                    putExtra("TELEFONO", telefonoCompleto)
                 }
+                startActivity(intent)
             }
+            // Si elige "No", el diálogo se cierra pero el contacto ya está asignado a 'contactoSeleccionado'
             .setNegativeButton("No", null)
             .show()
-    }
-
-    private fun ejecutarLlamada(telefono: String) {
-        val intent = Intent(Intent.ACTION_CALL).apply {
-            data = Uri.parse("tel:$telefono")
-        }
-        try {
-            startActivity(intent)
-        } catch (e: SecurityException) {
-            Toast.makeText(this, "Permiso de llamada denegado", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == CODIGO_PERMISO_LLAMADA) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (telefonoPendiente.isNotEmpty()) {
-                    ejecutarLlamada(telefonoPendiente)
-                }
-            } else {
-                Toast.makeText(this, "El permiso de llamada es obligatorio por rúbrica", Toast.LENGTH_LONG).show()
-            }
-        }
     }
 
     private fun eliminarDeBD(id: Long) {
