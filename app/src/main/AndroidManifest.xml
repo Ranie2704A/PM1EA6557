@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
@@ -26,8 +29,11 @@
 
         <activity
             android:name=".ListaActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
+            android:exported="false" />
+
+        <activity
+            android:name=".LlamarActivity"
+            android:exported="false" />
 
     </application>
 

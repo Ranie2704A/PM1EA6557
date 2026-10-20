@@ -64,6 +64,8 @@ class MainActivity : AppCompatActivity() {
             val telefonoRecibido = intent.getStringExtra("TELEFONO")
             val notaRecibida = intent.getStringExtra("NOTA")
 
+            val imagenRecibida = intent.getStringExtra("IMAGEN") ?: ""
+
             editTextName.setText(nombreRecibido)
             editTextPhone.setText(telefonoRecibido)
             editTextNota.setText(notaRecibida)
@@ -73,6 +75,18 @@ class MainActivity : AppCompatActivity() {
             if (adapter != null && paisRecibido != null) {
                 val position = adapter.getPosition(paisRecibido)
                 if (position >= 0) spinnerPais.setSelection(position)
+            }
+
+            if (imagenRecibida.isNotEmpty()) {
+                try {
+                    val decodedBytes = Base64.decode(imagenRecibida, Base64.DEFAULT)
+                    val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                    imageViewFoto.setImageBitmap(bitmap)
+
+                    imagenBase64 = imagenRecibida
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
 
