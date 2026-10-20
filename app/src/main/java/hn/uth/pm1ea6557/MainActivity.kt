@@ -1,8 +1,11 @@
 package hn.uth.pm1ea6557
 
 import android.content.ContentValues
+import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -12,18 +15,18 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import hn.uth.pm1ea6557.DbHelper
-
+import java.io.ByteArrayOutputStream
 
 class MainActivity : AppCompatActivity() {
 
-    private var imagenUri: String = ""
+    private var imagenBase64: String = ""
     private lateinit var imageViewFoto: ImageView
+    private var idContactoActualizar: Long = -1L
 
     private val tomarFotoLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         if (bitmap != null) {
             imageViewFoto.setImageBitmap(bitmap)
-            imagenUri = "foto_capturada"
+            imagenBase64 = convertirBitmapABase64(bitmap)
         }
     }
 
@@ -38,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         val editTextPhone = findViewById<EditText>(R.id.editTextPhone)
         val editTextNota = findViewById<EditText>(R.id.editTextNota)
         val btnSalvarContactos = findViewById<Button>(R.id.btnSalvarContactos)
+        val btnVerLista = findViewById<Button>(R.id.btnContactosSalvados)
 
         ArrayAdapter.createFromResource(
             this,
@@ -50,6 +54,26 @@ class MainActivity : AppCompatActivity() {
 
         btnAbrirCamara.setOnClickListener {
             tomarFotoLauncher.launch(null)
+        }
+
+        val modoEdicion = intent.getBooleanExtra("MODO_EDICION", false)
+        if (modoEdicion) {
+            idContactoActualizar = intent.getLongExtra("ID", -1L)
+            val paisRecibido = intent.getStringExtra("PAIS")
+            val nombreRecibido = intent.getStringExtra("NOMBRE")
+            val telefonoRecibido = intent.getStringExtra("TELEFONO")
+            val notaRecibida = intent.getStringExtra("NOTA")
+
+            editTextName.setText(nombreRecibido)
+            editTextPhone.setText(telefonoRecibido)
+            editTextNota.setText(notaRecibida)
+            btnSalvarContactos.text = "Actualizar Registro"
+
+            val adapter = spinnerPais.adapter as? ArrayAdapter<String>
+            if (adapter != null && paisRecibido != null) {
+                val position = adapter.getPosition(paisRecibido)
+                if (position >= 0) spinnerPais.setSelection(position)
+            }
         }
 
         btnSalvarContactos.setOnClickListener {
@@ -98,25 +122,49 @@ class MainActivity : AppCompatActivity() {
                 put("nombre", nombre)
                 put("telefono", telefono)
                 put("nota", nota)
-                put("imagen", imagenUri)
+                if (imagenBase64.isNotEmpty()) {
+                    put("imagen", imagenBase64)
+                }
             }
 
-            val resultado = db.insert("contactos", null, values)
+            if (idContactoActualizar != -1L) {
+                val filasAfectadas = db.update("contactos", values, "id = ?", arrayOf(idContactoActualizar.toString()))
+                db.close()
 
-            if (resultado != -1L) {
-                Toast.makeText(this, "¡Contacto guardado con éxito!", Toast.LENGTH_SHORT).show()
-                // Limpiar campos y reiniciar el spinner
-                editTextName.text.clear()
-                editTextPhone.text.clear()
-                editTextNota.text.clear()
-                spinnerPais.setSelection(0)
-                imageViewFoto.setImageResource(0)
-                imagenUri = ""
+                if (filasAfectadas > 0) {
+                    Toast.makeText(this, "¡Contacto actualizado con éxito!", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(this, "Error al actualizar el contacto", Toast.LENGTH_SHORT).show()
+                }
             } else {
-                Toast.makeText(this, "Error al guardar el contacto", Toast.LENGTH_SHORT).show()
-            }
+                val resultado = db.insert("contactos", null, values)
+                db.close()
 
-            db.close()
+                if (resultado != -1L) {
+                    Toast.makeText(this, "¡Contacto guardado con éxito!", Toast.LENGTH_SHORT).show()
+                    editTextName.text.clear()
+                    editTextPhone.text.clear()
+                    editTextNota.text.clear()
+                    spinnerPais.setSelection(0)
+                    imageViewFoto.setImageResource(0)
+                    imagenBase64 = ""
+                } else {
+                    Toast.makeText(this, "Error al guardar el contacto", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
+
+        btnVerLista.setOnClickListener {
+            val intent = Intent(this, ListaActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    private fun convertirBitmapABase64(bitmap: Bitmap): String {
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        val byteArray = stream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 }
