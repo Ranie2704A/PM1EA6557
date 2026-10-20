@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">PM1EA6557</string>
+
+    <string-array name="paises_array">
+        <item>Seleccione un país</item>
+        <item>Honduras</item>
+        <item>México</item>
+        <item>Guatemala</item>
+        <item>El Salvador</item>
+        <item>Costa Rica</item>
+        <item>Estados Unidos</item>
+    </string-array>
+
 </resources>
