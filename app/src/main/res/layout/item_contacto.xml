@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp">
+
+    <View
+        android:id="@+id/viewPunto"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:background="@android:drawable/presence_busy"
+        android:layout_marginEnd="10dp" />
+
+    <TextView
+        android:id="@+id/txtNombreTelefono"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="José Escalante | 50499976543"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+</LinearLayout>
